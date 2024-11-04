@@ -1,0 +1,20 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/  # Eureka Server URL
+spring:
+  application:
+    name: GATEWAY-SERVICE
+  server:
+    port: 8080
+#  cloud:
+#    gateway:
+#      routes:
+#        - id: user-service
+#          uri: lb://USER-SERVICE  # lb:// allows load balancing
+#          predicates:
+#            - Path=/**
+#        - id: survey-service
+#          uri: lb://SURVEY-SERVICE
+#          predicates:
+#            - Path=/surveys/**
