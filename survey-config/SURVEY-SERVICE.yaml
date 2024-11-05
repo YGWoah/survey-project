@@ -1,0 +1,27 @@
+test: hihi
+spring:
+  application:
+    name: SURVEY-SERVICE
+
+  datasource:
+    url: jdbc:h2:mem:surveydb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+server:
+  port: 8082
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,13 +1,12 @@
+# H2 Database configuration
 spring:
-  application:
-    name: SURVEY-SERVICE
-
   datasource:
-    url: jdbc:h2:mem:surveydb
+    url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
-    username: sa
+    username: root
     password: password
 
+# JPA / Hibernate configuration
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,9 +15,15 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
 
-server:
-  port: 8082
+# Logging configuration
+logging:
+  level:
+    org:
+      springframework: INFO
+    com:
+      yourpackage: DEBUG
 
+# Open api configuration
 springdoc:
   api-docs:
     path: /v3/api-docs
