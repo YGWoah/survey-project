@@ -29,8 +29,4 @@ public class Survey {
     @JsonManagedReference
     private List<Question> questions;
 
-    @OneToMany(mappedBy = "survey", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<Response> responses;
-
 }

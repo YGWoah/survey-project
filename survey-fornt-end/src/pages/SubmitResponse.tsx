@@ -1,28 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Formik, Form, Field, FieldArray } from 'formik';
 import * as Yup from 'yup';
-import { Response, Survey } from '../types';
-import { submitResponse, getSurvey } from '../services/api';
+import { Survey } from '../types/api';
+import { submitResponse } from '@app/services/api_not-used';
+import { SurveyService } from '@app/services/surveyService';
+
+const validationSchema = Yup.object({
+  responses: Yup.array().of(
+    Yup.object({
+      questionId: Yup.string().required(),
+      answer: Yup.string().required('Response is required'),
+    })
+  ),
+});
 
 const SubmitResponse: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [survey, setSurvey] = useState<Survey | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [survey, setSurvey] = useState<Survey | null>(null);
 
   if (!id) return <div>No survey ID provided</div>;
 
   useEffect(() => {
-    const loadSurvey = async () => {
-      try {
-        const surveyData = await getSurvey(id);
-        setSurvey(surveyData);
-      } catch (err) {
+    SurveyService.getSurvey(id).then((survey) => {
+      if (!survey) {
         setError('Failed to load survey');
+        return;
       }
-    };
 
-    loadSurvey();
+      setSurvey(survey);
+    });
   }, [id]);
 
   if (error) {
@@ -33,22 +41,12 @@ const SubmitResponse: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  // Create initial values based on survey questions
   const initialValues = {
     responses: survey.questions.map((question) => ({
-      id: question.id,
-      text: '',
+      questionId: question.id,
+      answer: '',
     })),
   };
-
-  const validationSchema = Yup.object({
-    responses: Yup.array().of(
-      Yup.object({
-        id: Yup.string().required(),
-        text: Yup.string().required('Response is required'),
-      })
-    ),
-  });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -60,8 +58,8 @@ const SubmitResponse: React.FC = () => {
         validationSchema={validationSchema}
         onSubmit={async (values, { setSubmitting }) => {
           try {
-            await submitResponse({
-              surveyId: id,
+            await submitResponse(id, {
+              username: 'testuser',
               responses: values.responses,
             });
             alert('Response submitted successfully');
@@ -90,16 +88,22 @@ const SubmitResponse: React.FC = () => {
                       </label>
                       <Field
                         as="textarea"
-                        id={`responses.${index}.text`}
-                        name={`responses.${index}.text`}
+                        id={`responses.${index}.answer`}
+                        name={`responses.${index}.answer`}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border min-h-[100px]"
                       />
-                      {/* {touched.responses?.[index]?.text &&
-                        errors.responses?.[index]?.text && (
+                      {touched.responses?.[index]?.answer &&
+                        errors.responses?.[index]?.toString() && (
                           <div className="text-red-500 text-sm mt-1">
-                            {errors.responses[index].text}
+                            {
+                              (
+                                errors?.responses?.[index] as {
+                                  answer?: string;
+                                }
+                              )?.answer
+                            }{' '}
                           </div>
-                        )} */}
+                        )}
                     </div>
                   ))}
                 </div>

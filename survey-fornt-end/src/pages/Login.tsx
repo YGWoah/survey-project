@@ -1,8 +1,8 @@
 import React from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@app/contexts/KeyCloakAuthContext';
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Required'),
@@ -30,7 +30,7 @@ const Login: React.FC = () => {
                 email: values.email,
                 password: values.password,
               };
-              await login(LoginCredentials);
+              await login();
               navigate('/dashboard');
             } catch (error) {
               setErrors({ email: 'Invalid email or password' });

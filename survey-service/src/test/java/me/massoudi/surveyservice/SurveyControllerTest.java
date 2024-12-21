@@ -1,6 +1,8 @@
 package me.massoudi.surveyservice;
 
 
+import com.jayway.jsonpath.JsonPath;
+import lombok.AllArgsConstructor;
 import me.massoudi.surveyservice.entity.Survey;
 import me.massoudi.surveyservice.repo.SurveyRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +38,32 @@ public class SurveyControllerTest {
     }
 
     @Test
+    public void testCreateAndDeleteSurvey() throws Exception {
+        String surveyJson = "{\"title\": \"New Survey\", \"description\": \"Survey Description\", \"questions\": [" +
+                "{\"text\": \"Question 1\"}]}";
+
+        String response = mockMvc.perform(post("/api/surveys")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(surveyJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andReturn().getResponse().getContentAsString();
+
+        System.out.println("this is the response Object ");
+        System.out.println(response);
+        Integer surveyId = JsonPath.read(response, "$.id");
+
+        mockMvc.perform(delete("/api/surveys/" + surveyId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/surveys/" + surveyId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void testCreateSurvey() throws Exception {
-        String surveyJson = "{\"title\": \"New Survey\", \"description\": \"Survey Description\"}";
+        String surveyJson = "{\"title\": \"New Survey\", \"description\": \"Survey Description\", \"questions\": [" +
+                "{\"text\": \"Question 1\"}]}";
 
         mockMvc.perform(post("/api/surveys")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,5 +121,32 @@ public class SurveyControllerTest {
 
         mockMvc.perform(delete("/api/surveys/" + survey.getId()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testUpdateSurveyWithQuestions() throws Exception {
+        String surveyJson = "{\"title\": \"Initial Survey\", \"description\": \"Initial Description\", \"questions\": [" +
+                "{\"text\": \"Initial Question 1\"}, {\"text\": \"Initial Question 2\"}]}";
+
+        String response = mockMvc.perform(post("/api/surveys")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(surveyJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andReturn().getResponse().getContentAsString();
+
+        Integer surveyId = JsonPath.read(response, "$.id");
+
+        String updatedSurveyJson = "{\"title\": \"Updated Survey\", \"description\": \"Updated Description\", \"questions\": [" +
+                "{\"id\": 1, \"text\": \"Updated Question 1\"}, {\"text\": \"New Question 2\"}]}";
+
+        mockMvc.perform(put("/api/surveys/" + surveyId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedSurveyJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Updated Survey"))
+                .andExpect(jsonPath("$.description").value("Updated Description"))
+                .andExpect(jsonPath("$.questions[0].text").value("Updated Question 1"))
+                .andExpect(jsonPath("$.questions[1].text").value("New Question 2"));
     }
 }

@@ -1,17 +1,8 @@
+import { Survey, Answer } from '../types';
+import keycloakService from '@app/services/keycloak';
 import axios from 'axios';
-import { Survey } from '../types';
-// const API_URL =
-// process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+
 const API_URL = 'http://localhost:8080/api';
-
-// Create an axios instance with default config
-const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 const API_SURVEY_SERVICE = 'http://localhost:8082';
 
 const apiSurveyService = axios.create({
@@ -20,35 +11,56 @@ const apiSurveyService = axios.create({
     'Content-Type': 'application/json',
   },
 });
-// Add a request interceptor to include the auth token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+const api = axios.create({
+  baseURL: API_URL,
+});
+
+apiSurveyService.interceptors.request.use(async (config) => {
+  const token = keycloakService.getToken();
+
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-export interface Question {
-  id: string;
-  text: string;
-  type: 'text' | 'multipleChoice';
-  options?: string[];
-}
+apiSurveyService.interceptors.request.use(
+  async (config) => {
+    try {
+      if (keycloakService.isTokenExpired()) {
+        await keycloakService.updateToken();
+      }
+
+      const token = keycloakService.getToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.request.use(async (config) => {
+  const token = keycloakService.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export interface SurveyResponse {
-  id: string;
-  surveyId: string;
-  answers: Answer[];
-}
-
-export interface Answer {
-  questionId: string;
-  value: string;
+  [question: string]: Answer[];
 }
 
 export const getSurveys = async (): Promise<Survey[]> => {
   try {
+    console.log('getting surveys in api wiht the new token');
+
     const response = await apiSurveyService.get('/api/surveys');
     return response.data;
   } catch (error) {
@@ -116,7 +128,9 @@ export const getSurveyResponses = async (
   id: string
 ): Promise<SurveyResponse[]> => {
   try {
-    const response = await api.get(`/surveys/${id}/responses`);
+    const response = await apiSurveyService.get(
+      `/api/surveys/${id}/responses`
+    );
     return response.data;
   } catch (error) {
     console.error(
@@ -128,16 +142,19 @@ export const getSurveyResponses = async (
 };
 
 export interface SurveyResponseData {
-  surveyId: string;
-  responses: {};
+  username: string;
+  responses: Omit<Answer, 'username'>[];
 }
 
 export const submitResponse = async (
+  surveyId: string | number,
   response: SurveyResponseData
 ): Promise<void> => {
+  console.log('submitting a response');
+
   try {
     apiSurveyService.post(
-      `/api/surveys/${response.surveyId}/responses`,
+      `/api/surveys/${surveyId}/responses`,
       response
     );
   } catch (error) {

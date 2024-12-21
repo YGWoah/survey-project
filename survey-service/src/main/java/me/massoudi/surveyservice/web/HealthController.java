@@ -13,8 +13,6 @@ public class HealthController {
 
     @Value("${server.port}")
     private String serverPort;
-    @Value("${test}")
-    private String test;
 
     @GetMapping("/")
     public String health() {
@@ -23,7 +21,7 @@ public class HealthController {
 
     @GetMapping("/test")
     public String test() {
-        return "Server port: " + serverPort + " Test: " + test;
+        return "Server port: " + serverPort ;
     }
 }
 

@@ -1,45 +1,88 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Survey } from '../types';
+import { Button } from '@app/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@app/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@app/components/ui/alert-dialog';
+import { Survey } from '@app/types/api';
 
 interface SurveyCardProps {
   survey: Survey;
+  onDelete: (id: string) => void;
 }
 
-const SurveyCard: React.FC<SurveyCardProps> = ({ survey }) => {
+const SurveyCard: React.FC<SurveyCardProps> = ({
+  survey,
+  onDelete,
+}) => {
+  let copyLinkToClipBoard = () => {
+    navigator.clipboard.writeText(
+      `${window.location.origin}/survey/${survey.id}/submit-response`
+    );
+  };
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="p-5">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">
-          {survey.title}
-        </h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
+    <Card>
+      <CardHeader>
+        <CardTitle>{survey.title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-gray-500 mb-4">
           {survey.description}
         </p>
-      </div>
-      <div className="border-t border-gray-200 bg-gray-50 px-5 py-3">
-        <Link
-          to={`/survey/${survey.id}`}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-        >
-          View details
-        </Link>
-        <span className="mx-2">•</span>
-        <Link
-          to={`/survey/${survey.id}/responses`}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-        >
-          View responses
-        </Link>
-        <span className="mx-2">•</span>
-        <Link
-          to={`/survey/${survey.id}/submit-response`}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-        >
-          add a response
-        </Link>
-      </div>
-    </div>
+        <div className="flex justify-between">
+          <Link to={`/survey/${survey.id}`}>
+            <Button variant="outline">View</Button>
+          </Link>
+          <Link to={`/survey/${survey.id}/update`}>
+            <Button variant="outline">Update</Button>
+          </Link>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Are you absolutely sure?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently
+                  delete your survey and remove all associated data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDelete(survey.id)}
+                >
+                  Delete Survey
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <button
+            className="text-blue-500"
+            onClick={copyLinkToClipBoard}
+          >
+            Share link{' '}
+          </button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

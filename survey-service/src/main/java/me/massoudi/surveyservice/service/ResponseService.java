@@ -1,17 +1,18 @@
 package me.massoudi.surveyservice.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import me.massoudi.surveyservice.dto.QuestionResponseDTO;
 import me.massoudi.surveyservice.dto.ResponseDTO;
+import me.massoudi.surveyservice.dto.SubmitResponseDTO;
 import me.massoudi.surveyservice.entity.Question;
 import me.massoudi.surveyservice.entity.Response;
-import me.massoudi.surveyservice.entity.Survey;
 import me.massoudi.surveyservice.mapper.ResponseMapper;
+import me.massoudi.surveyservice.repo.QuestionRepository;
 import me.massoudi.surveyservice.repo.ResponseRepository;
-import me.massoudi.surveyservice.repo.SurveyRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,44 +20,79 @@ import java.util.stream.Collectors;
 public class ResponseService {
 
     private final ResponseRepository responseRepository;
-    private final SurveyRepository surveyRepository;
     private final ResponseMapper responseMapper;
+    private final QuestionRepository questionRepository;
+    private final SurveyService surveyService;
+
+    public List<ResponseDTO> submitResponse(SubmitResponseDTO responseDTO, String username) {
+        if (responseDTO == null || responseDTO.getResponses() == null || responseDTO.getResponses().isEmpty()) {
+            throw new IllegalArgumentException("No responses provided");
+        }
 
 
-    public ResponseDTO submitResponse(Long surveyId, ResponseDTO responseDTO) {
-        Survey survey = surveyRepository.getById(surveyId);
-        List<Response> responses = responseDTO.getResponses().stream().map(questionResponseDTO -> {
-            Response response = new Response();
-            response.setAnswer(questionResponseDTO.getAnswer());
-//            response.setUsername(responseDTO.getUsername());
-            response.setSurvey(survey);
-            Question question = new Question();
-            question.setId(questionResponseDTO.getQuestionId());
-            response.setQuestion(question);
-            return response;
-        }).collect(Collectors.toList());
+        Set<Long> questionIds = responseDTO.getResponses().stream()
+                .map(QuestionResponseDTO::getQuestionId)
+//                .filter(Objects::nonNull)  // Filter out null IDs
+                .collect(Collectors.toSet());
+        System.out.println(questionIds);
+        if (questionIds.isEmpty()) {
+            throw new IllegalArgumentException("No valid question IDs provided");
+        }
 
+        Map<Long, Question> questionMap = questionRepository.findAllById(questionIds)
+                .stream()
+                .collect(Collectors.toMap(Question::getId, question -> question));
+
+        if (questionMap.size() != questionIds.size()) {
+            Set<Long> missingQuestionIds = new HashSet<>(questionIds);
+            missingQuestionIds.removeAll(questionMap.keySet());
+            throw new EntityNotFoundException("Questions not found for IDs: " + missingQuestionIds);
+        }
+
+        List<Response> responses = responseDTO.getResponses().stream()
+                .map(questionResponse -> {
+                    Response response = new Response();
+                    response.setAnswer(questionResponse.getAnswer());
+                    response.setQuestion(questionMap.get(questionResponse.getQuestionId()));
+                    response.setUsername(username);
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        // Save all responses in one batch
         List<Response> savedResponses = responseRepository.saveAll(responses);
-        ResponseDTO savedResponseDTO = new ResponseDTO();
-        savedResponseDTO.setUsername(responseDTO.getUsername());
-        savedResponseDTO.setResponses(savedResponses.stream().map(response -> {
-            QuestionResponseDTO questionResponseDTO = new QuestionResponseDTO();
-            questionResponseDTO.setQuestionId(response.getQuestion().getId());
-            questionResponseDTO.setAnswer(response.getAnswer());
-            return questionResponseDTO;
-        }).collect(Collectors.toList()));
 
-        return savedResponseDTO;
+        System.out.println(savedResponses);
+        System.out.println("it reachred here ");
+        // Convert to DTOs and return
+        return savedResponses.stream()
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
+
+
     }
 
-    public List<Response> getResponses(Long surveyId) {
-        return responseRepository.findBySurveyId(surveyId);
+
+    public List<Map<String, List<ResponseDTO>>> getResponses(Long surveyId) {
+        List<Question> questionsOfSurvey = questionRepository.findBySurveyId(surveyId);
+        List<Map<String, List<ResponseDTO>>> test = questionsOfSurvey.stream().map((question -> {
+            Map<String, List<ResponseDTO>> questionResponses = new HashMap<>();
+            questionResponses.put(
+                    question.getText(),
+                    question.getResponses().stream().map(
+                            response -> responseMapper.toDto(response)
+                    ).collect(Collectors.toList())
+            );
+            return questionResponses;
+
+        })).toList();
+        return test;
     }
 
-    public ResponseDTO getResponseById(Long surveyId, Long responseId) {
-        Survey survey = surveyRepository.getById(surveyId);
-        Response response = responseRepository.findResponseByIdAndSurvey(responseId, survey);
-        return responseMapper.toDto(response);
+    public ResponseDTO getResponseById(Long responseId) {
+
+        Optional<Response> response = responseRepository.findById(responseId);
+        return response.map(responseMapper::toDto).orElse(null);
     }
 
     public void deleteResponse(Long surveyId, Long responseId) {

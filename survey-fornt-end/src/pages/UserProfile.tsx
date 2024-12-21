@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { getUserProfile, updateUserProfile } from '../services/api';
-import { useAuth } from '../hooks/useAuth';
+import {
+  getUserProfile,
+  updateUserProfile,
+} from '@app/services/api_not-used';
+import { UserService } from '@app/services/userService';
+import { useAuth } from '@app/contexts/KeyCloakAuthContext';
 
 const ProfileSchema = Yup.object().shape({
   name: Yup.string().required('Required'),
@@ -10,7 +14,7 @@ const ProfileSchema = Yup.object().shape({
 });
 
 const UserProfile: React.FC = () => {
-  const { user } = useAuth();
+  const { username } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +22,15 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        const userInfo = await UserService.getUserInfo();
+        console.log(userInfo);
+        const tokenInfo = await UserService.getTokenInfo();
+        console.log(tokenInfo);
+        const user = await UserService.getUser();
+        console.log(user);
+
         const data = await getUserProfile();
+
         setProfile(data);
       } catch (err) {
         setError('Failed to fetch user profile');

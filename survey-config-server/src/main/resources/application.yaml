@@ -1,10 +1,9 @@
 server:
   port: 8888
-
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
 spring:
   application:
     name: config-server
@@ -12,6 +11,8 @@ spring:
     config:
       server:
         git:
-          uri: /home/yg-woah/DevFolders/survey-config-repo
-          default-label: master  # or 'master' depending on your GitHub default branch
-#          search-paths: /*
+          uri: https://github.com/YGWoah/survey-project.git
+          default-label: main  # or 'main' depending on your GitHub default branch
+          username: YGWoah
+          password: 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
+#          search-paths: /path/to/config-folder

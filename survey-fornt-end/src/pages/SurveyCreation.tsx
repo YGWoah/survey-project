@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Form, Field, FieldArray, Formik } from 'formik';
 import * as Yup from 'yup';
 import { Plus, X } from 'lucide-react';
-import { createSurvey } from '../services/api';
+import { createSurvey } from '@app/services/api_not-used';
 
-// Validation schema for a single question
 const QuestionSchema = Yup.object().shape({
   text: Yup.string().required('Question text is required'),
 });

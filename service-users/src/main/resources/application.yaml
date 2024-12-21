@@ -1,8 +1,11 @@
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
 spring:
   cloud:
     config:
       uri: http://localhost:8888
+keycloak:
+  realm: survey-realm
+  client-id: survey-client
+#  client-secret: 3e4e4b3e-3b3b-4b4b-8b8b-3e3e3e3e3e3e
+  auth-server-url: http://localhost:8080/auth
+  admin-username: admin
+  admin-password: admin

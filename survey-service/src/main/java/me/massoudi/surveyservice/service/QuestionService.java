@@ -36,7 +36,7 @@ public class QuestionService {
         return questions.stream().map(questionMapper::toDto).toList();
     }
 
-    public Question updateQuestion(Long surveyId, Long questionId, Question question) {
+    public Question updateQuestion(Long surveyId, Long questionId, QuestionDTO question) {
         Question existingQuestion = questionRepository.findById(questionId).orElseThrow(() -> new RuntimeException("Question not found"));
         existingQuestion.setText(question.getText());
         return questionRepository.save(existingQuestion);

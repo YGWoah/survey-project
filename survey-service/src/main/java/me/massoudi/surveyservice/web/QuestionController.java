@@ -30,7 +30,7 @@ public class QuestionController {
     }
 
     @PutMapping("/{questionId}")
-    public Question updateQuestion(@PathVariable Long surveyId, @PathVariable Long questionId, @RequestBody Question question) {
+    public Question updateQuestion(@PathVariable Long surveyId, @PathVariable Long questionId, @RequestBody QuestionDTO question) {
         return questionService.updateQuestion(surveyId, questionId, question);
     }
 

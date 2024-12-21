@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="survery-eureka-server" />
+        <module name="survey-app-load-balancer" />
+        <module name="survey-config-server" />
+        <module name="survey-service" />
+        <module name="service-users" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="service-users" options="-parameters" />
+      <module name="survery-eureka-server" options="-parameters" />
+      <module name="survey-app-load-balancer" options="-parameters" />
+      <module name="survey-config-server" options="-parameters" />
+      <module name="survey-service" options="-parameters" />
+    </option>
+  </component>
+</project>

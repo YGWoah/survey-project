@@ -3,6 +3,11 @@ package me.massoudi.surveyservice.web;
 
 import me.massoudi.surveyservice.dto.SurveyDTO;
 import me.massoudi.surveyservice.entity.Survey;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.web.bind.annotation.*;
 import me.massoudi.surveyservice.service.SurveyService;
 
@@ -19,10 +24,18 @@ public class SurveyController {
     }
 
     @PostMapping
-    public SurveyDTO createSurvey(@RequestBody SurveyDTO survey) {
-        return surveyService.createSurvey(survey);
+    public SurveyDTO createSurvey(@RequestBody SurveyDTO survey, @AuthenticationPrincipal OAuth2AuthenticatedPrincipal jwt, Authentication authentication) {
+        String username = authentication.getName();
+        return surveyService.createSurvey(survey,username);
     }
 
+    @GetMapping("/my-surveys")
+    public List<SurveyDTO> getSurveysByUsername(Authentication authentication) {
+        String username = authentication.getName();
+        return surveyService.getSurveysByOwnerUsername(username);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<SurveyDTO> getAllSurveys() {
         return surveyService.getAllSurveys();
@@ -34,8 +47,9 @@ public class SurveyController {
     }
 
     @PutMapping("/{surveyId}")
-    public Survey updateSurvey(@PathVariable Long surveyId, @RequestBody Survey survey) {
-        return surveyService.updateSurvey(surveyId, survey);
+    public SurveyDTO updateSurvey(@PathVariable Long surveyId, @RequestBody SurveyDTO surveyDTO) {
+        System.out.println("surveyId = " + surveyId);
+        return surveyService.updateSurvey(surveyId, surveyDTO);
     }
 
     @DeleteMapping("/{surveyId}")

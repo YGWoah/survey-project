@@ -3,10 +3,13 @@ package me.massoudi.surveyservice.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
+
 import java.util.List;
 
 @Entity
 @Data
+@ToString(exclude = {"survey"})
 public class Question {
 
     @Id
